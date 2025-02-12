@@ -18,9 +18,12 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
 ]
 dependencies = [
-    "torch~=2.5.1",
-    "numpy~=1.26.4",
-    "scipy~=1.13.1",
+    "torch @ https://download.pytorch.org/whl/nightly/cu128/torch-2.7.0.dev20250304%2Bcu128-cp311-cp311-manylinux_2_28_x86_64.whl",
+    "pytorch-triton @ https://download.pytorch.org/whl/nightly/pytorch_triton-3.2.0%2Bgit4b3bb1f8-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+    "torchaudio @ https://download.pytorch.org/whl/nightly/cu128/torchaudio-2.6.0.dev20250304%2Bcu128-cp311-cp311-linux_x86_64.whl",
+    "torchvision @ https://download.pytorch.org/whl/nightly/cu128/torchvision-0.22.0.dev20250304%2Bcu128-cp311-cp311-linux_x86_64.whl",
+    "numpy >=1.17,<3",
+    "scipy",
     "matplotlib"
 ]
 
@@ -38,16 +41,10 @@ build-backend = "hatchling.build"
 [project.optional-dependencies]
 test = [
     "pytest",
-    "hypothesis",
-    "tabulate",
-    "PyQt6",
 ]
 dev = [
     "pytest",
-    "hypothesis",
-    "tabulate",
-    "PyQt6",
-    "black",
+    "ruff"
 ]
 
 

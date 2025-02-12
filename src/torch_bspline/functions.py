@@ -143,7 +143,7 @@ class BSplineFunctions(nn.Module):
                 +   output_yy
             )
         else:
-            F = self.basis.laplacian(points)
+            F = self.basis.laplacian(points=points)
             return self.maybe_flatten(torch.einsum("xb,bf->xf", F, weights))
 
 

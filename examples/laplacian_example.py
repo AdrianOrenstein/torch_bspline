@@ -93,3 +93,9 @@ if __name__ == '__main__':
     print("Laplacian should NOT be everywhere zero...")
     print(f"Laplacian(f).max() = {f.laplacian(xy_grid).max()}")
     print(f"Laplacian(f).min() = {f.laplacian(xy_grid).min()}")
+
+    xy = torch.rand((100,2), dtype=torch.float64)
+
+    print("Laplacian should NOT be everywhere zero...")
+    print(f"Laplacian(f).max() = {f.laplacian(xy).max()}")
+    print(f"Laplacian(f).min() = {f.laplacian(xy).min()}")

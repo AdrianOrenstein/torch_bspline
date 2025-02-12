@@ -137,7 +137,7 @@ class TensorBasis(nn.Module):
 
 
     # Laplacian of RBF interpolated GRF
-    def laplacian(self, *, points:torch.Tensor):
+    def laplacian(self, points:torch.Tensor):
         
         out_laplacian = None
 
