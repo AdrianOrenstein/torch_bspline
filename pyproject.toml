@@ -18,9 +18,9 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
 ]
 dependencies = [
-    "torch~=2.5.1",
-    "numpy~=1.26.4",
-    "scipy~=1.13.1",
+    "torch~=2.5.0",
+    "numpy >=1.17,<3",
+    "scipy",
     "matplotlib"
 ]
 
