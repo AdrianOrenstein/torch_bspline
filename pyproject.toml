@@ -5,10 +5,6 @@ description = "A simple library for using b-splines in pytorch."
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
-authors = [
-    { name = "Hugo Melchers", email = "h.a.melchers@tue.nl"},
-    { name = "Jeffrey Cochran", email = "jeffrey.david.cochran@gmail.com"},
-]
 keywords = ["bpsline", "b-spline", "spline", "pytorch", "torch", "spline", "interpolation", "approximation"]
 classifiers = [
     "Development Status :: 1 - Planning",
@@ -18,10 +14,6 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
 ]
 dependencies = [
-    "torch~=2.5.1",
-    "numpy~=1.26.4",
-    "scipy~=1.13.1",
-    "matplotlib"
 ]
 
 

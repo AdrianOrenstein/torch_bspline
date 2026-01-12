@@ -2,27 +2,26 @@
 
 from __future__ import annotations
 
+from math import log
 
 # Standard
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
 import torch
 from torch import nn
-from math import log
 
 
 class BSpline(nn.Module):
-
     dim = 1
 
-
     def __init__(
-        self, *,
-        lims:Tuple[float, float],
-        n_segments:int,
-        degree:int,
-        max_ratio:float = 1.0,
-        log_widths:Optional[torch.Tensor] = None
+        self,
+        *,
+        lims: Tuple[float, float],
+        n_segments: int,
+        degree: int,
+        max_ratio: float = 1.0,
+        log_widths: Optional[torch.Tensor] = None,
     ):
         """
         Creates a new BSpline that forms a basis of the interval [a, b],
@@ -63,21 +62,17 @@ class BSpline(nn.Module):
         super(BSpline, self).__init__()
 
         if n_segments < 2:
-            raise TypeError(
-                f"BSplineLayer1D: n_segments must be greater than 1, but got {n_segments}"
-            )
+            raise TypeError(f"BSplineLayer1D: n_segments must be greater than 1, but got {n_segments}")
 
         self.n_segments = n_segments
         self.degree = degree
         self.lims = lims
 
         if log_widths is not None:
-
             self.dtype = log_widths.dtype
 
             assert log_widths.numel() == n_segments, (
-                f"BSplineLayer got n_segments={n_segments}, but log_widths "
-                f"with {log_widths.numel()} elements"
+                f"BSplineLayer got n_segments={n_segments}, but log_widths with {log_widths.numel()} elements"
             )
 
             if isinstance(log_widths, nn.Parameter):
@@ -97,24 +92,11 @@ class BSpline(nn.Module):
             self.log_widths = nn.Parameter(torch.rand(n_segments) * log(max_ratio))
             self.dtype = torch.float32
 
-
     @staticmethod
-    def uniform(
-        lims:Tuple[float, float],
-        n_segments:int,
-        degree:int,
-        dtype:torch.dtype=torch.float32
-    ) -> BSpline:
+    def uniform(lims: Tuple[float, float], n_segments: int, degree: int, dtype: torch.dtype = torch.float32) -> BSpline:
         return BSpline(
-            lims=lims,
-            n_segments=n_segments,
-            degree=degree,
-            log_widths=torch.zeros(
-                (n_segments,),
-                dtype=dtype
-            )
+            lims=lims, n_segments=n_segments, degree=degree, log_widths=torch.zeros((n_segments,), dtype=dtype)
         )
-
 
     def get_knot_vector(self):
         """
@@ -147,7 +129,6 @@ class BSpline(nn.Module):
 
         return knots
 
-
     def get_partition(self):
         """
         Gets the points that partition the interval on which this function is
@@ -167,7 +148,6 @@ class BSpline(nn.Module):
         )
         return knots
 
-
     def forward(self, x):
         """
         Compute the b-splines at the given x-values. The output is an N×M
@@ -175,12 +155,7 @@ class BSpline(nn.Module):
         """
         knots = self.get_knot_vector().unsqueeze(0)
 
-        return BSpline._bspline_get_values(
-            knots=knots,
-            degree=self.degree,
-            x=x
-        )
-
+        return BSpline._bspline_get_values(knots=knots, degree=self.degree, x=x)
 
     def derivative(self, x, k=1):
         """
@@ -191,39 +166,26 @@ class BSpline(nn.Module):
         knots = self.get_knot_vector().unsqueeze(0)
         nf = knots.numel() - degree - 1
         W = torch.diag(torch.ones(nf, dtype=x.dtype, device=x.device))
-        return BSpline._bspline_get_derivatives(
-            knots=knots,
-            degree=degree,
-            k=k,
-            x=x,
-            W=W
-        )
-
+        return BSpline._bspline_get_derivatives(knots=knots, degree=degree, k=k, x=x, W=W)
 
     @staticmethod
-    def _bspline_get_values(
-        *,
-        knots: torch.Tensor,
-        degree: int,
-        x: torch.Tensor
-    ) -> torch.Tensor:
-
+    def _bspline_get_values(*, knots: torch.Tensor, degree: int, x: torch.Tensor) -> torch.Tensor:
         # NOTE:
         #   This function originally defaulted to x.dtype;
         #   however, this led to inconsistent result.dtype
-        #   depending on whether the loop (degree>0?) was executed 
+        #   depending on whether the loop (degree>0?) was executed
         #   because `knots` may have a different dtype.
         # dtype = (knots[0,0] + x[0]).dtype
 
         _dtype = x.dtype
-        
+
         if _dtype != knots.dtype:
             raise Warning(
                 "The input tensor `x` and the knot vector `knots` have "
                 "different dtypes, %s and %s, respectively. Casting knots to %s",
                 str(_dtype),
                 str(knots.dtype),
-                str(_dtype)
+                str(_dtype),
             )
 
         _knots = knots.to(dtype=_dtype)
@@ -236,8 +198,7 @@ class BSpline(nn.Module):
             (
                 padding,
                 x < _knots[:, degree + 1],
-                (_knots[:, degree + 1 : -degree - 2] <= x)
-                * (x < _knots[:, degree + 2 : -degree - 1]),
+                (_knots[:, degree + 1 : -degree - 2] <= x) * (x < _knots[:, degree + 2 : -degree - 1]),
                 _knots[:, -degree - 2] <= x,
                 padding,
             ),
@@ -257,16 +218,8 @@ class BSpline(nn.Module):
 
         return result
 
-
     @staticmethod
-    def _bspline_get_derivatives(
-        *,
-        knots,
-        degree,
-        k,
-        x,
-        W
-    ):
+    def _bspline_get_derivatives(*, knots, degree, k, x, W):
         _dtype = x.dtype
 
         if _dtype != knots.dtype:
@@ -275,7 +228,7 @@ class BSpline(nn.Module):
                 "different dtypes, %s and %s, respectively. Casting knots to %s",
                 str(_dtype),
                 str(knots.dtype),
-                str(_dtype)
+                str(_dtype),
             )
 
         if _dtype != W.dtype:
@@ -284,7 +237,7 @@ class BSpline(nn.Module):
                 "different dtypes, %s and %s, respectively. Casting W to %s",
                 str(_dtype),
                 str(W.dtype),
-                str(_dtype)
+                str(_dtype),
             )
 
         _W = W.to(dtype=_dtype)
@@ -292,11 +245,7 @@ class BSpline(nn.Module):
 
         nf = _knots.numel() - degree - 1
         if k == 0:
-            return BSpline._bspline_get_values(
-                knots=_knots,
-                degree=degree,
-                x=x
-            ) @ _W
+            return BSpline._bspline_get_values(knots=_knots, degree=degree, x=x) @ _W
         elif k > degree:
             return torch.zeros((x.numel(), nf), dtype=_dtype, device=x.device)
         else:
@@ -306,14 +255,7 @@ class BSpline(nn.Module):
             a1 = _knots[:, 1:nf]
             b1 = _knots[:, degree + 1 : -1]
             W2 = degree * _W.diff(dim=0) / torch.maximum(b1 - a1, eps).T
-            return BSpline._bspline_get_derivatives(
-                knots=_knots[:, 1:-1],
-                degree=degree - 1,
-                k=k - 1,
-                x=x,
-                W=W2
-            )
-
+            return BSpline._bspline_get_derivatives(knots=_knots[:, 1:-1], degree=degree - 1, k=k - 1, x=x, W=W2)
 
     @staticmethod
     def _bspline_get_derivative_weights(knots, degree, k, W):
@@ -333,10 +275,7 @@ class BSpline(nn.Module):
             # current formulation will contain some basis functions that have zero
             # support since their control points are just the left or right
             # endpoint repeated. So we have to remove these.
-            return BSpline._bspline_get_derivative_weights(
-                knots[:, 1:-1], degree - 1, k - 1, W2
-            )
-
+            return BSpline._bspline_get_derivative_weights(knots[:, 1:-1], degree - 1, k - 1, W2)
 
     def __len__(self):
         return self.degree + self.n_segments

@@ -5,23 +5,19 @@ import torch
 from torch import nn
 
 # Local
-from torch_bspline.bspline import BSpline
-from torch_bspline.tensor_grid import TensorGrid
+from torch_bspline.src.torch_bspline.bspline import BSpline
+from torch_bspline.src.torch_bspline.tensor_grid import TensorGrid
 
 
 class TensorBasis(nn.Module):
-
     dim = 2
 
-
-    def __init__(self, f_x:BSpline, f_y:BSpline=None):
+    def __init__(self, f_x: BSpline, f_y: BSpline = None):
         super().__init__()
         self.f_x = f_x
         self.f_y = f_y
 
-
-    def forward(self, points:torch.Tensor|TensorGrid) -> torch.Tensor:
-
+    def forward(self, points: torch.Tensor | TensorGrid) -> torch.Tensor:
         f_x = self.f_x
         f_y = self.f_y or f_x
 
@@ -52,14 +48,12 @@ class TensorBasis(nn.Module):
         return out_eval
 
     def gradient(self, points):
-
         out_grad_eval = None
 
         f_x = self.f_x
         f_y = self.f_y or f_x
 
         if isinstance(points, TensorGrid):
-
             f = f_x(points.xs)
             df = f_x.derivative(points.xs)
 
@@ -88,12 +82,9 @@ class TensorBasis(nn.Module):
             df = f_x.derivative(X)
             dg = f_y.derivative(Y)
 
-            out_grad_eval = torch.stack(
-                (self.outer_product(df, g), self.outer_product(f, dg)), -1
-            )
+            out_grad_eval = torch.stack((self.outer_product(df, g), self.outer_product(f, dg)), -1)
 
         return out_grad_eval
-
 
     def hessian(self, points):
         f_x = self.f_x
@@ -135,10 +126,8 @@ class TensorBasis(nn.Module):
                 -1,
             )
 
-
     # Laplacian of RBF interpolated GRF
-    def laplacian(self, points:torch.Tensor):
-        
+    def laplacian(self, points: torch.Tensor):
         out_laplacian = None
 
         f_x = self.f_x
@@ -152,10 +141,9 @@ class TensorBasis(nn.Module):
                 ys = points.ys if points.ys is not None else points.xs
                 g = f_y(ys)
                 ddg = f_y.derivative(ys, 2)
-            out_laplacian = (
-                    self.tensor_product(ddf, g, points.x_varies_first)
-                +   self.tensor_product(f, ddg, points.x_varies_first)
-            ) 
+            out_laplacian = self.tensor_product(ddf, g, points.x_varies_first) + self.tensor_product(
+                f, ddg, points.x_varies_first
+            )
         else:
             X = points[:, 0]
             Y = points[:, 1]
@@ -163,15 +151,12 @@ class TensorBasis(nn.Module):
             g = f_y(Y)
             ddf = f_x.derivative(X, 2)
             ddg = f_y.derivative(Y, 2)
-            out_laplacian = (
-                    self.outer_product(ddf, g)
-                +   self.outer_product(f, ddg)
-            )
+            out_laplacian = self.outer_product(ddf, g) + self.outer_product(f, ddg)
 
         return out_laplacian
 
     @staticmethod
-    def outer_product(a:torch.Tensor, b:torch.Tensor) -> torch.Tensor:
+    def outer_product(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
         # a should be n × f
         # b should be n × g
         # output should then be n × (f*g)
@@ -180,17 +165,10 @@ class TensorBasis(nn.Module):
         g = b.shape[1]
 
         # TODO: confirm the ordering of the reshaped tensor
-        return (
-            a.reshape(n, f, 1) * b.reshape(n, 1, g)
-        ).reshape(n, f * g)
-
+        return (a.reshape(n, f, 1) * b.reshape(n, 1, g)).reshape(n, f * g)
 
     @staticmethod
-    def tensor_product(
-        a:torch.Tensor,
-        b:torch.Tensor,
-        x_varies_first:bool
-    ) -> torch.Tensor:
+    def tensor_product(a: torch.Tensor, b: torch.Tensor, x_varies_first: bool) -> torch.Tensor:
         # a should be m × f
         # b should be n × g
         # output should then be mn × fg
@@ -206,7 +184,6 @@ class TensorBasis(nn.Module):
             a = a.reshape(m, 1, f, 1)
             b = b.reshape(1, n, 1, g)
         return (a * b).reshape(m * n, f * g)
-
 
     def __len__(self):
         f_x = self.f_x

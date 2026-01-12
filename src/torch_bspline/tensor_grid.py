@@ -1,11 +1,7 @@
-# Copyright 2025, Hugo Melchers, Eindhoven University of Technology
-
 import torch
 
 
 class TensorGrid:
-
-
     def __init__(self, xs, ys=None, x_varies_first=False):
         """
         Construct a TensorGrid with the given x-coordinates and y-coordinates.
@@ -40,7 +36,6 @@ class TensorGrid:
         else:
             return torch.cartesian_prod(x, y)
 
-
     @staticmethod
     def from_tensor(XY):
         """
@@ -63,9 +58,7 @@ class TensorGrid:
         while n < mn and X[n] == x0:
             n += 1
 
-        assert (
-            mn % n == 0
-        ), f"TensorGrid.from_tensor: found len(xs) = {n} which isn't a divisor of {mn}"
+        assert mn % n == 0, f"TensorGrid.from_tensor: found len(xs) = {n} which isn't a divisor of {mn}"
         # Then, the first `n` y-values form the basis in the y-direction
         # And the x-basis is given by a strided slice of the x-values
         ys = Y[:n]
@@ -78,11 +71,8 @@ class TensorGrid:
             ys = None
 
         grid = TensorGrid(xs, ys, x_varies_first)
-        assert all(
-            grid.full().ravel() == XY.ravel()
-        ), "TensorGrid.from_tensor: input was not of tensor product form"
+        assert all(grid.full().ravel() == XY.ravel()), "TensorGrid.from_tensor: input was not of tensor product form"
         return grid
-
 
     @property
     def grid_shape(self):
@@ -90,16 +80,13 @@ class TensorGrid:
         ys = self.ys if self.ys is not None else xs
         return (xs.numel(), ys.numel())
 
-
     def __str__(self):
         m = self.xs.numel()
         n = m if self.ys is None else self.ys.numel()
         return f"TensorGrid({m}×{n})"
 
-
     def __repr__(self):
         return f"TensorGrid({self.xs}, {self.ys})"
-
 
     def to(self, device):
         xs = self.xs.to(device)
